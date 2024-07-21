@@ -1,0 +1,200 @@
+---
+title: "TRL"
+author: "Felix Westcott"
+date: "2024-05-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(xlsx)
+library(dplyr)
+library(ggpubr)
+library(ggsci)
+library(rstatix)
+library (cowplot)
+library(ggprism)
+
+
+```
+
+
+```{R, Unlabelled}
+
+Unlabelled_Data <- read_excel("TRL all data.xlsx", sheet = 1)
+
+Unlabelled_Data <- rename(Unlabelled_Data, "IHCTG" = "Intracellular 16:0 from TG(umol/g of protein)", "IHCFA" = "Intracellular 16:0 (umol/g of protein)", "EHCFA" = "Media 16:0 (nmol/g of protein)")
+
+for (i in 8:ncol(Unlabelled_Data)) {
+   formula <- as.formula(paste("`", colnames(Unlabelled_Data)[i], "`", " ~ TRL*Media*BAF", sep=""))
+   model <- aov(formula, data = Unlabelled_Data)
+
+   cat("\n-----\n\n")
+   cat(colnames(Unlabelled_Data)[i])
+   cat("\n")
+   print(summary(model))
+}
+
+#Saline IHCTG -/+ BAF
+ggstripchart(filter(Unlabelled_Data, Unlabelled_Data$TRL == "S"), "Media", "IHCTG",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 16:0 from TG \n (nmol/g of protein)", ylim = c(0,2000), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+
+#Saline IHCFA -/+ BAF
+ggstripchart(filter(Unlabelled_Data, Unlabelled_Data$TRL == "S"), "Media", "IHCFA",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 16:0 from TG \n (nmol/g of protein)", ylim = c(0,100), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab")
+
+
+#Saline EHCFA -/+ BAF
+ggstripchart(filter(Unlabelled_Data, Unlabelled_Data$TRL == "S"), "Media", "EHCFA",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Media 16:0 \n (nmol/g of protein)", ylim = c(0,125), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+#-BAF IHCTG S/T TRL
+ggstripchart(filter(Unlabelled_Data, Unlabelled_Data$BAF == "-"), "Media", "IHCTG",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 16:0 from TG \n (nmol/g of protein)", ylim = c(0,2000), color = "TRL", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") 
+
+```
+
+```{R, Labelled}
+
+Labelled_Data <- read_excel("TRL all data.xlsx", sheet = 2)
+
+for (i in 8:ncol(Labelled_Data)) {
+   formula <- as.formula(paste("`", colnames(Labelled_Data)[i], "`", " ~ BAF*Media", sep=""))
+   model <- aov(formula, data = Labelled_Data)
+
+   cat("\n-----\n\n")
+   cat(colnames(Labelled_Data)[i])
+   cat("\n")
+   print(summary(model))
+}
+
+Labelled_Data <- rename(Labelled_Data, "TRL uptake" = "13C 16:0 from TG in media uptake (nmol/g of protein)", "TRL uptake_pc" = "TRL uptake (%)", "FA Release" = "13C 16:0 release (nmol/g of protein)", "IHCTG" = "Intracellular 13C 16:0 from TG (nmol/g of protein)", "IHCFA" = "Intracellular 13C 16:0 (nmol/g of protein)", "Tracer recovery" = "Tracer recovery (%)","IHCTG_pc" = "Proportion as IHCTG (%)", "IHCFA_pc" = "Proportion as IHCFA (%)", "FA Release_pc" = "Proportion as secreted FA (%)") 
+
+
+#TRL uptake
+ggstripchart(Labelled_Data, "Media", "TRL uptake",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "13C 16:0 from TG in media uptake \n (nmol/g of protein)", ylim = c(0,2000), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(Labelled_Data, "Media", "TRL uptake_pc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "TRL uptake (%)", ylim = c(0,50), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+
+#IHCTG
+ggstripchart(Labelled_Data, "Media", "IHCTG",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 from TG \n (nmol/g of protein)", ylim = c(0,400), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(Labelled_Data, "Media", "IHCTG_pc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 from TG \n (nmol/g of protein)", ylim = c(0,50), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(filter(Labelled_Data, Labelled_Data$BAF == "-"), "Media", "IHCTG",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 from TG \n (nmol/g of protein)", ylim = c(0,400), color = "Media", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+#EHCFA
+ggstripchart(Labelled_Data, "Media", "FA Release",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "13C 16:0 release (nmol/g of protein)", ylim = c(0,125), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(Labelled_Data, "Media", "FA Release_pc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "13C 16:0 release (nmol/g of protein)", ylim = c(0,20), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+
+#IHCFA
+ggstripchart(Labelled_Data, "Media", "IHCFA",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,15), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(Labelled_Data, "Media", "IHCFA_pc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,2), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+#Tracer recovery
+ggstripchart(Labelled_Data, "Media", "Tracer recovery",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,100), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+#Lipolysis Ratio
+ggstripchart(Labelled_Data, "Media", "Lipolysis Ratio",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,1), color = "BAF", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+```
+
+
+
+```{R}
+
+All_Data2 <- read_excel("TRL all data.xlsx", sheet = 3)
+
+for (i in 8:ncol(All_Data2)) {
+   formula <- as.formula(paste("`", colnames(All_Data2)[i], "`", " ~ Media", sep=""))
+   model <- aov(formula, data = All_Data2)
+
+   cat("\n-----\n\n")
+   cat(colnames(All_Data2)[i])
+   cat("\n")
+   print(summary(model))
+}
+
+
+ggstripchart(All_Data2, "Media", "Total 13C 16:0 release",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", color = "Media", palette = "npg", size = 1.2, ylab = "Total 13C 16:0 release", ylim = c(0,200), shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab")+
+  rremove("legend")
+
+
+ggstripchart(All_Data2, "Media", "13C 16:0 HL release",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", color = "Media", palette = "npg", size = 1.2, ylab = "Total 13C 16:0 release", ylim = c(0,200), shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab")+
+  rremove("legend")
+
+ggstripchart(All_Data2, "Media", "13C 16:0 Lipophagy relase",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", color = "Media", palette = "npg", size = 1.2, ylab = "Total 13C 16:0 release", ylim = c(0,200), shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab")+
+  rremove("legend")
+
+```

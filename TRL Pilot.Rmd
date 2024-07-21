@@ -1,0 +1,110 @@
+---
+title: "TRL Pilot"
+author: "Felix Westcott"
+date: "2024-05-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(xlsx)
+library(dplyr)
+library(ggpubr)
+library(ggsci)
+library(rstatix)
+library (cowplot)
+library(ggprism)
+
+
+```
+
+```{R}
+
+All_Data <- read_excel("TRL Pilot Calculations.xlsx", sheet = 3)
+
+#All_Data <- filter(All_Data, All_Data$Round != "1")
+
+#All_Data <- filter(All_Data, All_Data$TRL == "High")
+
+for (i in 9:ncol(All_Data)) {
+   formula <- as.formula(paste(colnames(All_Data)[i], " ~ Time*BAF*TRL", sep=""))
+   model <- aov(formula, data = All_Data)
+
+   cat("\n-----\n\n")
+   cat(colnames(All_Data)[i])
+   cat("\n")
+   print(summary(model))
+}
+
+All_Data2 <- read_excel("TRL Pilot Calculations.xlsx", sheet = 4)
+
+#All_Data2 <- filter(All_Data2, All_Data$Round != "1")
+
+#All_Data2 <- filter(All_Data2, All_Data$TRL == "High")
+
+aov.res <- aov(Uptake ~ Time*BAF*TRL, data = All_Data2)
+
+summary(aov.res)
+
+```
+
+
+``` {R, graphing}
+
+ggerrorplot(All_Data, "Time", "TG",
+       legend.title = "BAF", add = "dotplot", palette = "npg", desc_stat = "mean_sd", color = "BAF") +
+   theme_prism(base_size = 14) +
+  theme(legend.position = "top", legend.title = element_text()) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+ggsave('C:/Users/fwestcott/OneDrive - Nexus365/Desktop/Results/TRL/Graphs/TRL TG Pilot.png')
+
+ggerrorplot(All_Data, "Time", "FA",
+       legend.title = "BAF", add = "dotplot", palette = "npg", desc_stat = "mean_sd", color = "BAF") +
+   theme_prism(base_size = 14) +
+  theme(legend.position = "top", legend.title = element_text()) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+ggsave('C:/Users/fwestcott/OneDrive - Nexus365/Desktop/Results/TRL/Graphs/TRL FA Pilot.png')
+
+ggerrorplot(All_Data, "Time", "Lipolysis",
+       legend.title = "BAF", add = "dotplot", palette = "npg", desc_stat = "mean_sd", color = "BAF") +
+   theme_prism(base_size = 14) +
+  theme(legend.position = "top", legend.title = element_text()) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+ggsave('C:/Users/fwestcott/OneDrive - Nexus365/Desktop/Results/TRL/Graphs/TRL Lipolysis Pilot.png')
+
+ggerrorplot(All_Data2, "Time", "Uptake",
+       legend.title = "TRL", add = "dotplot", palette = "npg", desc_stat = "mean_sd", color = "TRL") +
+   theme_prism(base_size = 14) +
+  theme(legend.position = "top", legend.title = element_text()) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+
+ggerrorplot(All_Data2, "TRL", "Uptake", add = "dotplot", palette = "npg", color = "TRL", desc_stat = "mean_sd") +
+   theme_prism(base_size = 14) +
+  theme(legend.position = "top", legend.title = element_text()) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+
+pairwise.test = All_Data %>%
+  t_test(TG ~ TRL) %>%
+  adjust_pvalue(method = "holm") %>%
+  add_significance("p.adj") %>%
+  add_xy_position(x = "TRL")
+pairwise.test <- filter(pairwise.test, p.adj.signif != "ns")
+
+ggerrorplot(All_Data, "TRL", "TG", add = "dotplot", palette = "npg", color = "TRL", desc_stat = "mean_sd") +
+   theme_prism(base_size = 14) +
+  theme(legend.position = "top", legend.title = element_text()) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  stat_pvalue_manual(pairwise.test, label = "p.adj.signif", y.position  = 300)
+
+
+
+```
