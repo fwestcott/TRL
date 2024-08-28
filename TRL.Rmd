@@ -26,7 +26,7 @@ library(ggprism)
 
 Labelled_Data <- read_excel("TRL all data.xlsx", sheet = 2)
 
-Labelled_Data <- filter(Labelled_Data, Labelled_Data$`Time (hours)` == 2)
+Labelled_Data <- filter(Labelled_Data, Labelled_Data$`Time` == 2)
 
 Control_Data <- filter(Labelled_Data, Labelled_Data$Media == "LFLS")
 
@@ -141,6 +141,8 @@ ggsave('C:/Users/fwestcott/OneDrive - Nexus365/Desktop/Outputs/Thesis/figures/ch
 
 Labelled_Basal_Inhibited_Data <- read_excel("TRL all data.xlsx", sheet = 4)
 
+Labelled_Basal_Inhibited_Data <- filter(Labelled_Basal_Inhibited_Data, Labelled_Basal_Inhibited_Data$`Time (hours)` == 2)
+
 for (i in 9:ncol(Labelled_Basal_Inhibited_Data)) {
    formula <- as.formula(paste("`", colnames(Labelled_Basal_Inhibited_Data)[i], "`", " ~ Media", sep=""))
    model <- aov(formula, data = Labelled_Basal_Inhibited_Data)
@@ -221,6 +223,211 @@ ggsave('C:/Users/fwestcott/OneDrive - Nexus365/Desktop/Outputs/Thesis/figures/ch
 
 
 ```
+```{R, Labelled TRL Just Control, 6 hours}
+
+Labelled_Data <- read_excel("TRL all data.xlsx", sheet = 2)
+
+Labelled_Data <- filter(Labelled_Data, Labelled_Data$`Time` == 6)
+
+Control_Data <- filter(Labelled_Data, Labelled_Data$Media == "LFLS")
+
+for (i in 9:ncol(Control_Data)) {
+   formula <- as.formula(paste("`", colnames(Control_Data)[i], "`", " ~ BAF", sep=""))
+   model <- t_test(formula, data = Control_Data)
+   
+   cat("\n-----\n\n")
+   cat(colnames(Control_Data)[i])
+   cat("\n")
+   print(model)
+}
+
+#Actually useful graphs
+ggstripchart(Control_Data, "BAF", "TRL disappearance conc",
+       add = c("mean", "mean_sd", "jitter"), color = "BAF", error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Extracellular 13C 16:0 in TG \n disappearance (nmol/g of protein)", ylim = c(0,600), shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(Control_Data, "BAF", "IHCTG conc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 in TG \n (nmol/g of protein)", ylim = c(0,200), color = "BAF", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(Control_Data, "BAF", "EHCFA conc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Extracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,50), color = "BAF", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+t.test = Control_Data %>%
+  t_test(`IHCFA conc` ~ BAF) %>%
+  add_significance("p") %>%
+  filter(p < 0.1) %>%
+  add_xy_position(x = "BAF")
+
+ggstripchart(Control_Data, "BAF", "IHCFA conc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,15), color = "BAF", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend") +
+  stat_pvalue_manual(t.test, label = "p.signif", y.position = 9)
+
+```
 
 
+
+
+```{R, 6 hour all conditions}
+
+All_Data <- filter(Labelled_Data, Labelled_Data$BAF == "Veh")
+
+for (i in 8:ncol(All_Data)) {
+   formula <- as.formula(paste("`", colnames(All_Data)[i], "`", " ~ Media", sep=""))
+   model <- aov(formula, data = All_Data)
+
+   cat("\n-----\n\n")
+   cat(colnames(All_Data)[i])
+   cat("\n")
+   print(summary(model))
+}
+
+#Actually useful graphs
+ggstripchart(All_Data, "Media", "TRL disappearance conc",
+       add = c("mean", "mean_sd", "jitter"), color = "Media", error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Extracellular 13C 16:0 in TG \n disappearance (nmol/g of protein)", ylim = c(0,600), shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(All_Data, "Media", "IHCTG conc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 in TG \n (nmol/g of protein)", ylim = c(0,200), color = "Media", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(All_Data, "Media", "EHCFA conc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Extracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,50), color = "Media", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+All_Data <- rename(All_Data, "IHCFA" = "IHCFA conc")
+
+pairwise.test = All_Data %>%
+ tukey_hsd(IHCFA ~ Media2) %>%
+  filter(p.adj < 0.1) %>%
+  add_xy_position(x = "Media2")
+
+ggstripchart(All_Data, "Media", "IHCFA",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,10), color = "Media", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend") +
+  stat_pvalue_manual(pairwise.test, label = "p.adj.signif")
+
+
+
+```
+
+```{R, Basal - Inhibited stuff}
+
+
+Labelled_Basal_Inhibited_Data <- read_excel("TRL all data.xlsx", sheet = 4)
+
+Labelled_Basal_Inhibited_Data <- filter(Labelled_Basal_Inhibited_Data, Labelled_Basal_Inhibited_Data$`Time (hours)` == 6)
+
+for (i in 9:ncol(Labelled_Basal_Inhibited_Data)) {
+   formula <- as.formula(paste("`", colnames(Labelled_Basal_Inhibited_Data)[i], "`", " ~ Media", sep=""))
+   model <- aov(formula, data = Labelled_Basal_Inhibited_Data)
+
+   cat("\n-----\n\n")
+   cat(colnames(Labelled_Basal_Inhibited_Data)[i])
+   cat("\n")
+   print(summary(model))
+}
+
+ggstripchart(Labelled_Basal_Inhibited_Data, "Media", "Inhibited EHCFA",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Extracellular 13C 16:0 released from  \n non-autophagic lipolysis (nmol/g of protein)", ylim = c(-20,100), color = "Media", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(Labelled_Basal_Inhibited_Data, "Media", "Lipophagy EHCFA",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Extracellular 13C 16:0 released from \n autophagic lipolysis (nmol/g of protein)", ylim = c(0,100), color = "Media", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend") 
+
+ggstripchart(Labelled_Basal_Inhibited_Data, "Media", "Inhibited IHCFA",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 released from \n non-autophagic lipolysis (nmol/g of protein)", ylim = c(0,10), color = "Media", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+pairwise.test = Labelled_Basal_Inhibited_Data %>%
+ tukey_hsd(`Lipophagy IHCFA` ~ Media2) %>%
+  filter(p.adj < 0.1) %>%
+  add_xy_position(x = "Media2")
+
+ggstripchart(Labelled_Basal_Inhibited_Data, "Media", "Lipophagy IHCFA",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 released from \n autophagic lipolysis (nmol/g of protein)", ylim = c(0,6), color = "Media", shape = 4) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend") +
+  stat_pvalue_manual(pairwise.test, label = "p.adj.signif", y.position = 5)
+
+```
+
+
+```{R, timecourse}
+
+Labelled_Data <- read_excel("TRL all data.xlsx", sheet = 2)
+
+All_Data <- filter(Labelled_Data, Labelled_Data$BAF == "Veh")
+
+
+for (i in 9:ncol(All_Data)) {
+   formula <- as.formula(paste("`", colnames(All_Data)[i], "`", " ~ Media*Time", sep=""))
+   model <- aov(formula, data = All_Data)
+
+   cat("\n-----\n\n")
+   cat(colnames(All_Data)[i])
+   cat("\n")
+   print(summary(model))
+}
+
+All_Data$Time <- factor(All_Data$Time, levels = c("2","6"))
+
+ggstripchart(All_Data, "Media", "TRL disappearance conc",
+       add = c("mean", "mean_sd", "jitter"), color = "Time", error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Extracellular 13C 16:0 in TG \n disappearance (nmol/g of protein)", ylim = c(0,600), shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(All_Data, "Media", "TRL disappearance",
+       add = c("mean", "mean_sd", "jitter"), color = "Time", error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Extracellular 13C 16:0 in TG \n disappearance (%)", ylim = c(0,100), shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(All_Data, "Media", "IHCTG conc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 in TG \n (nmol/g of protein)", ylim = c(0,200), color = "Time", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(All_Data, "Media", "EHCFA conc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Extracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,150), color = "Time", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+ggstripchart(All_Data, "Media", "IHCFA conc",
+       add = c("mean", "mean_sd", "jitter"), error.plot = "errorbar", palette = "npg", size = 1.2, ylab = "Intracellular 13C 16:0 \n (nmol/g of protein)", ylim = c(0,15), color = "Time", shape = 4, position = position_dodge(0.8)) +
+   theme_prism(base_size = 14) + 
+  rremove("xlab") +
+  rremove("legend")
+
+
+```
 
